@@ -1,6 +1,0 @@
-requests
-parsel
-pydantic
-pymongo
-fastapi
-uvicorn

@@ -1,11 +1,8 @@
-ctories you want Git to ignore. For example:
-
-plaintext
-Copy code
 # Ignore Python bytecode
 *.pyc
 *.pyo
 __pycache__/
+*.__init__
 
 # Ignore virtual environments
 venv/
@@ -32,3 +29,4 @@ Thumbs.db
 
 # MyPy
 .mypy_cache/
+

@@ -1,15 +1,24 @@
-from fastapi import APIRouter, HTTPException
-from pymongo import MongoClient
 from bson.objectid import ObjectId
+from fastapi import APIRouter, HTTPException
 from config.db_config import Database_config
 from models.schemas import Movie, MovieCreate, MovieResponse, MovieUpdate
+from logs import log
+
+# Connect to the 'movies' collection in MongoDB
 collection = Database_config.connect_to_database('movies')
 
+#Define API Router for movie endpoints
 endPoints = APIRouter()
 
 def document_to_movie(doc):
-    print(f'Processing document: {doc}')
-    print(f'Type of document: {type(doc)}')
+    """
+    Converts a MongoDB document to a MovieResponse object.
+
+    :param doc: MongoDB document.
+    :return: MovieResponse object.
+    """
+    message = f'Type of document: {type(doc)}'
+    log.log_debug(message)
     try:
         return MovieResponse(
             id=str(doc.get('_id')),
@@ -21,25 +30,48 @@ def document_to_movie(doc):
             image_url=doc.get('image_url')
         )
     except KeyError as e:
-        print(f'Missing key inn document: {e}')
+        message = 'Missing key in document!'
+        log.log_error(message, e)
         raise HTTPException(status_code='500', detail='something went wrong in database!')
 
 @endPoints.get('/')
 def get_all_movies():
+    """
+    Fetch all movies from the database.
+
+    :return: List of MovieResponse objects.
+    """
+    message = 'Fetching all movies'
+    log.log_debug(message)
     try:
         results = collection.find()
         if not results:
-            raise HTTPException(status_code=404, detail='Movie was not found!')
+            message = 'No movies found!'
+            log.log_warning(message)
+            raise HTTPException(status_code=404, detail='No movies found!')
         
         movies_list = list(results)
         response = [document_to_movie(movie) for movie in movies_list]
-        return response
+        return {
+            'Total movies: ':len(response),
+            'Movies list: ': response
+        }
     except Exception as e:
-        print(f'Error occurred at get all function: {e}')
+        message = 'Error occurred at get all movies function! '
+        log.log_error(message, e)
         raise HTTPException(status_code=500, detail='something went wrong')
     
 @endPoints.get('/pagination')
 def get_all_movies_pagination(page: int=1, limit: int=10):
+    """
+    Fetch movies with pagination.
+
+    :param page: Page number.
+    :param limit: Number of movies per page.
+    :return: Paginated movies response.
+    """
+    message = f'Fetching movies with pagination: page={page}, limit={limit}'
+    log.log_debug(message)
     try:
         if page < 1 or limit < 1:
             raise HTTPException(status_code=400, detail='Page and limit must be positive integers.')
@@ -63,6 +95,14 @@ def get_all_movies_pagination(page: int=1, limit: int=10):
 
 @endPoints.get('/region')
 def get_movies_for_region(region='United States'):
+    """
+    Fetch movies for a specific region.
+
+    :param region: Region name.
+    :return: Movies from the specified region.
+    """
+    message = f'Fetching movies for region: {region}'
+    log.log_debug(message)
     try:
         results = collection.find({'country': region})
         movies_list = list(results)
@@ -72,16 +112,26 @@ def get_movies_for_region(region='United States'):
             'movies': response
         }
     except Exception as e:
-        print(f'Sommething went wrong at get movie for region: {e}')
+        message = 'Something went wrong in get_movies_for_region! '
+        log.log_error(message, e)
         raise HTTPException(status_code=500, detail='something went wrong at get region')
 
 @endPoints.delete('/{movie_id}')
 def delete_movie(movie_id: str):
+    """
+    Delete a movie by its ID.
+
+    :param movie_id: ID of the movie to delete.
+    :return: Success message if the movie is deleted.
+    """
+    message = f'Deleting movie with ID: {movie_id}'
+    log.log_debug(message)
     try:
         result = collection.delete_one({'_id': ObjectId(movie_id)})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail='aint movies was found!')
         return{'message': 'movie deleted successfully'}
     except Exception as e:
-        print(f'Something went wrong at delete_movie: {e}')
+        message = 'Something went wrong at delete_movie! '
+        print(message, e)
         raise HTTPException(status_code=500, detail='Something went wrong at delete movie!')

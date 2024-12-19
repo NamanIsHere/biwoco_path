@@ -28,7 +28,7 @@ class DatabaseConfig:
         :return: MongoDB collection instance or None if connection fails.
         """
         mongo_uri = os.getenv('MONGO_URI')
-        database_name = os.getenv('DATABASE_NAME')
+        database_name = os.getenv('database')
         try:
             client = MongoClient(mongo_uri)
             db = client[database_name]

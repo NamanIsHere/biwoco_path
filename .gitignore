@@ -30,3 +30,12 @@ Thumbs.db
 # MyPy
 .mypy_cache/
 
+__init__.py
+config/__init__.py
+imdb_fastapi/__init__.py
+imdb_fastapi/routes/__init__.py
+logs/__init__.py
+models/__init__.py
+scrapers/__init__.py
+transform_validate/__init__.py
+utils/__init__.py

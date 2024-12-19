@@ -9,7 +9,7 @@ It includes functionality for:
 import os
 from dotenv import load_dotenv
 from logs import log
-from utils import save_data
+#from utils import save_data
 from config import db_config
 from transform_validate import validate_data
 from scrapers.movies_scraper import fetch_url, scrape_movies_from_each_country
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     #load variables in .env file
     load_dotenv()
     base_url = os.getenv('base_url')
-    get_collection = os.getenv('movies')
+    get_collection = os.getenv('movie_collection')
     #1 Connect to MongoDB
     store_in_collection = db_config.DatabaseConfig.connect_to_database(get_collection)
 
@@ -32,9 +32,9 @@ if __name__ == '__main__':
     validated_data = validate_data.validate_movies(scraped_data)
 
     #4 store to database
-    if store_in_collection is not None and validated_data:
+    """if store_in_collection is not None and validated_data:
         save_data.save_data_to_db(validated_data, store_in_collection)
     else:
         MESSAGE = 'Opps! something went wrong at main function when\
         trying to store data into database!'
-        log.log_message(MESSAGE)
+        log.log_message(MESSAGE)"""

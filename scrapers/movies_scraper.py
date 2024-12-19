@@ -15,8 +15,14 @@ from logs import log
 load_dotenv()
 #create session to maintain cookies and headers
 session = requests.session()
-vir_session = os.getenv('session')
-session.headers.update(vir_session)
+session_headers = {
+    "User-Agent": os.getenv("user-agent"),
+    "Accept-Language": os.getenv("accept-language"),
+    "Accept-Encoding": os.getenv("accept-encoding"),
+    "Referer": os.getenv("referer"),
+    "Connection": os.getenv("connection"),
+}
+session.headers.update(session_headers)
 
 def fetch_url(url):
     """

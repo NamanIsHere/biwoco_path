@@ -1,4 +1,0 @@
-MONGO_URI = mongodb+srv://myAtlasDBUser:myatlas-001@myatlasclusteredu.tlzhb.mongodb.net/
-database = imbd_on_coming_movies
-movie_collection = movies
-base_url = https://www.imdb.com/calendar/?region=VN&type=MOVIE&ref_=rlm

@@ -1,11 +1,25 @@
+"""
+Module: Fast API Route
+
+This module defines API Routes with CRUD methods.
+get_all_movies is used to fetch all movies data in database.
+get_all_movies_pagination is used to fetch all movies but with pagination.
+get_movies_for_region is used to fetch movies by region.
+delete_movie is used to delete movie by it _id.
+"""
+import os
+from dotenv import load_dotenv
 from bson.objectid import ObjectId
 from fastapi import APIRouter, HTTPException
-from config.db_config import Database_config
-from models.schemas import Movie, MovieCreate, MovieResponse, MovieUpdate
+from config.db_config import DatabaseConfig
+from models.schemas import MovieResponse
 from logs import log
 
+#load variables in .evn file
+load_dotenv()
 # Connect to the 'movies' collection in MongoDB
-collection = Database_config.connect_to_database('movies')
+db_collection = os.getenv('movie_collection')
+collection = DatabaseConfig.connect_to_database(db_collection)
 
 #Define API Router for movie endpoints
 endPoints = APIRouter()
@@ -32,8 +46,8 @@ def document_to_movie(doc):
     except KeyError as e:
         message = 'Missing key in document!'
         log.log_error(message, e)
-        raise HTTPException(status_code='500', detail='something went wrong in database!')
-
+        raise HTTPException(status_code=500, detail='something went wrong!\
+                            missing key in document.') from e
 @endPoints.get('/')
 def get_all_movies():
     """
@@ -49,7 +63,7 @@ def get_all_movies():
             message = 'No movies found!'
             log.log_warning(message)
             raise HTTPException(status_code=404, detail='No movies found!')
-        
+
         movies_list = list(results)
         response = [document_to_movie(movie) for movie in movies_list]
         return {
@@ -59,8 +73,8 @@ def get_all_movies():
     except Exception as e:
         message = 'Error occurred at get all movies function! '
         log.log_error(message, e)
-        raise HTTPException(status_code=500, detail='something went wrong')
-    
+        raise HTTPException(status_code=500, detail='something went wrong') from e
+
 @endPoints.get('/pagination')
 def get_all_movies_pagination(page: int=1, limit: int=10):
     """
@@ -81,7 +95,7 @@ def get_all_movies_pagination(page: int=1, limit: int=10):
         movies_list = list(results)
         if not movies_list:
             raise HTTPException(status_code=404, detail='No movie was found!')
-        
+
         response = [document_to_movie(movie) for movie in movies_list]
         return {
             'page': page,
@@ -91,7 +105,7 @@ def get_all_movies_pagination(page: int=1, limit: int=10):
         }
     except Exception as e:
         print(f'Error occurred at pagination function: {e}')
-        raise HTTPException(status_code=500, detail='something went wrong at pagination')
+        raise HTTPException(status_code=500, detail='something went wrong at pagination') from e
 
 @endPoints.get('/region')
 def get_movies_for_region(region='United States'):
@@ -114,7 +128,7 @@ def get_movies_for_region(region='United States'):
     except Exception as e:
         message = 'Something went wrong in get_movies_for_region! '
         log.log_error(message, e)
-        raise HTTPException(status_code=500, detail='something went wrong at get region')
+        raise HTTPException(status_code=500, detail='something went wrong at get region') from e
 
 @endPoints.delete('/{movie_id}')
 def delete_movie(movie_id: str):
@@ -133,5 +147,6 @@ def delete_movie(movie_id: str):
         return{'message': 'movie deleted successfully'}
     except Exception as e:
         message = 'Something went wrong at delete_movie! '
-        print(message, e)
-        raise HTTPException(status_code=500, detail='Something went wrong at delete movie!')
+        log.log_error(message, e)
+        raise HTTPException(status_code=500, detail='Something went wrong\
+        at delete movie!') from e

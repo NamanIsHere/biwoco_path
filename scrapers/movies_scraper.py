@@ -1,19 +1,22 @@
-import random
-import requests
+"""
+Scraping Module.
+This module provide methods for scraping data.
+"""
 
+import os
+import random
 from time import sleep
+from dotenv import load_dotenv
+import requests
 from parsel import Selector
 from logs import log
 
+#load variables in .env file
+load_dotenv()
 #create session to maintain cookies and headers
 session = requests.session()
-session.headers.update({
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Referer": "https://www.google.com/",    # Pretend to came from Google
-    "Connection": "keep-alive"
-})
+vir_session = os.getenv('session')
+session.headers.update(vir_session)
 
 def fetch_url(url):
     """
@@ -43,26 +46,21 @@ def get_country(html):
     countries = []
 
     options = selector.css('select#country-selector option')
-    
+
     for option in options:
         country_code = option.css('::attr(value)').get()
         country_name = option.css('::text').get()
         countries.append({'country_code': country_code, 'country_name': country_name})
-    
-    message = f"""
-    =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-    list of countries code can use for API calls:
-    {countries['country_code']}
-    =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-    """
-    log(message)
+
+        log.log_message(country_code)
 
     return countries
 
 def scrape_movies(html, region):
     """
     Scrapes movie data from the provided HTML content for a given region.
-    Check if there are any movies data on the page. if none append the default values to movies list.
+    Check if there are any movies data on the page. if none append the 
+    default values to movies list.
 
     :param html: HTML content of the webpage.
     :param region: The name of the region for the movies.
@@ -72,7 +70,7 @@ def scrape_movies(html, region):
     sections = selector.css("article[data-testid='calendar-section']")
     movies = []
 
-    if sections != []:
+    if sections:
         for section in sections:
             release_date = section.css("div[data-testid='release-date'] h3::text").get()
             movie_items = section.css("li[data-testid='coming-soon-entry']")
@@ -98,7 +96,7 @@ def scrape_movies(html, region):
                 'actors': list_actors,
                 'country': region,
                 'image_url': image_url
-            }) 
+            })
     else:
         movies.append({
             'release_date': 'Jan 01, 2001',
@@ -130,10 +128,12 @@ def scrape_movies_from_each_country(html):
 
         html_content = fetch_url(fixed_url)
         if not html_content:
-            log.log_message(f'In function scrape_movies_from_each_country failed to fetched data for region: {country['country_name']}')
+            message = f'In function crape_movies_from_each_country\
+              failed to fetched data for region: {country['country_name']}'
+            log.log_message(message)
             return []
         movies_list.extend(scrape_movies(html_content, country_name))
-       
+
         message_to_log = f"""
         =======================
         {len(movies_list)}

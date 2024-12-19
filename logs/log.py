@@ -5,7 +5,7 @@ This module provides logging functions for debugging, informational messages, wa
 import logging
 
 logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s',
     )
 def log_debug(message):

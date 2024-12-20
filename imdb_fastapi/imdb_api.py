@@ -4,7 +4,6 @@ This module sets up the FastAPI app and includes movie-related endpoints.
 """
 
 import sys
-import json
 from fastapi import FastAPI
 from imdb_fastapi.routes.route import endPoints
 
@@ -31,5 +30,6 @@ KZ, KW, LV, LB, LR, LY, LT, LU, MO, MY, MV, MH, MX, ME,\
 MM, NP, NL, NZ, NI, NG, NO, PK, PY, PE, PH, PL, PT, PR,\
 QA, RO, RU, SA, RS, SG, SK, SI, ZA, KR, ES, LK, SE, CH,\
 TW, TH, TR, UA, AE, GB, US, UY, VE, VN
-        """
+        """,
+        'api to get all movies list': 'http://127.0.0.1:8000/api/movies'
         }

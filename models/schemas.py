@@ -45,3 +45,20 @@ class MovieResponse(Movie):
         id: The unique identifier of the movie.
     """
     id: str
+
+class Movies(BaseModel):
+    """
+    Another response schema for a movie.
+    """
+    release_date: str
+    title: str
+    tags: List[str]
+    actors: List[str]
+    country: str
+
+class ActorMovies(BaseModel):
+    """
+    Schema for actor with list of movies that actor has joined
+    """
+    actor_name: Optional[str] = 'None'
+    movies: Optional[list[Movies]] = []

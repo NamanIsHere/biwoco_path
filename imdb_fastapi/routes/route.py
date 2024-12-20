@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from bson.objectid import ObjectId
 from fastapi import APIRouter, HTTPException
 from config.db_config import DatabaseConfig
-from models.schemas import MovieResponse
+from models.schemas import  MovieResponse, Movies, ActorMovies
 from logs import log
 
 #load variables in .evn file
@@ -23,6 +23,26 @@ collection = DatabaseConfig.connect_to_database(db_collection)
 
 #Define API Router for movie endpoints
 endPoints = APIRouter()
+
+def document_to_actor(doc):
+    """
+    Converts a MongoDB document to a MovieResponse object.
+    :param doc: MongoDB document.
+    :return: ActorResponse object
+    """
+    try:
+        return Movies(
+            release_date=doc.get("release_date"),
+            title=doc.get("title"),
+            tags=doc.get("tags"),
+            actors=doc.get("actors"),
+            country=doc.get("country"),
+        )
+    except KeyError as e:
+        message = 'Missing key in document!'
+        log.log_error(message, e)
+        raise HTTPException(status_code=500, detail='something went wrong!\
+                            missing key in document.') from e
 
 def document_to_movie(doc):
     """
@@ -129,6 +149,53 @@ def get_movies_for_region(region='United States'):
         message = 'Something went wrong in get_movies_for_region! '
         log.log_error(message, e)
         raise HTTPException(status_code=500, detail='something went wrong at get region') from e
+
+@endPoints.get('/no_image')
+def get_movies_with_no_image():
+    """
+    Fetch movies that doesn't have movie image.
+
+    :return: Movies with no images to show.
+    """
+    message = 'Fetching movie that have no images'
+    log.log_message(message)
+    try:
+        results = collection.find({'image_url': 'N/A'})
+        movies_list = list(results)
+        response = [document_to_movie(movie) for movie in movies_list]
+        return {
+            'list of movies have no images': response
+        }
+    except Exception as e:
+        message = 'Something went wrong in get_movies_with_no_image! '
+        log.log_error(message, e)
+        raise HTTPException(status_code=500, detail=message) from e
+
+@endPoints.get('/actor')
+def get_movie_with_actor(actor_name = "Hong Dao"):
+    """
+    Fetch movies with actor name
+    :param actor: actor name.
+    :return: list of movies data  that have actor name.
+    """
+    message = f'Fetching movie with actor name-{actor_name}'
+    log.log_message(message)
+    try:
+        results = collection.find({'actors': actor_name}, {'image_url': 0})
+        if results:
+            movies_list = list(results)
+            movies = [document_to_actor(movie) for movie in movies_list]
+            response = ActorMovies(actor_name=actor_name, movies=movies)
+            return {
+                'list_of_movies':response.dict(exclude={'movies_image_url'})
+            }
+        message = 'no movies was found by actor name!'
+        log.log_message(message)
+        return []
+    except Exception as e:
+        message = 'Something went wrong in get_movies_with_actor'
+        log.log_error(message, e)
+        raise HTTPException(status_code=500, detail=message) from e
 
 @endPoints.delete('/{movie_id}')
 def delete_movie(movie_id: str):
